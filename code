@@ -1,0 +1,24 @@
+import pandas as pd
+import numpy as np
+
+#Δημιουργία DataFrame με τα δεδομένα μας
+data = pd.read_csv('winequality-white.csv', sep=";",header = 'infer')
+
+#Επιλογή threshold
+threshold = data.quality.median()
+smaller = len(data.quality.loc[data.quality < threshold])
+greater = len(data.quality.loc[data.quality > threshold])
+
+print(threshold,smaller,greater)
+
+#Δημιουργία Κλάσεων: 0 - Βαθμολογία<6, 1 - Βαθμολογία>=6
+data['binQuality'] = [int(i>=threshold) for i in list(data.quality)]
+
+#Δημιουργία Training και Test Set
+trSet = (data.loc[data.binQuality == 0]).sample(frac=0.75)
+data.drop(trSet.index,inplace=True)
+temp = (data.loc[data.binQuality == 1]).sample(n=len(trSet))
+trSet = pd.concat([trSet,temp])
+testSet = data.loc[data.binQuality == 0]
+temp = (data.loc[data.binQuality == 1]).sample(n=len(testSet))
+testSet = pd.concat([testSet,temp])
