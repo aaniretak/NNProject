@@ -116,3 +116,9 @@ clf_LDA.fit(trSet.iloc[:,:-2],trSet.binQuality)
 
 W_LDA = clf_LDA.coef_[0]
 W0_LDA = clf_LDA.intercept_
+
+print("===== LDA WEIGHTS =======")
+print("W = ",W_LDA)
+print("W0 = ",W0_LDA)
+print("Normalized W = ",W_LDA/W_LDA[0])
+print("Normalized W0 = ",W0_LDA/W_LDA[0])
