@@ -22,3 +22,23 @@ trSet = pd.concat([trSet,temp])
 testSet = data.loc[data.binQuality == 0]
 temp = (data.loc[data.binQuality == 1]).sample(n=len(testSet))
 testSet = pd.concat([testSet,temp])
+
+#Επαναπροσδιορισμός Indexes για ευκολία στη χρήση
+trSet = trSet.set_index(np.arange(len(trSet)))
+testSet = testSet.set_index(np.arange(len(testSet)))
+
+#Προπαρασκευή Δεδομένων
+trSet.loc[trSet.binQuality==1].iloc[:,:11].plot(kind='hist',bins = 40, subplots = True,layout = (3,4), figsize = (30,20), sharex = True,title = "Excellent Quality")
+trSet.loc[trSet.binQuality==0].iloc[:,:11].plot(kind='hist',bins = 40, subplots = True,layout = (3,4), figsize = (30,20), sharex = True,title = "Poor Quality")
+
+for j in list(trSet)[:-2]:
+    #Αφαίρεση ακραίων τιμών
+    m_e=(trSet.loc[trSet.binQuality == 1])[j].mean()
+    m_p=(trSet.loc[trSet.binQuality == 0])[j].mean()
+    std_e=(trSet.loc[trSet.binQuality == 1])[j].std()
+    std_p=(trSet.loc[trSet.binQuality == 0])[j].std()
+    trSet.drop((trSet.loc[trSet.binQuality == 1]).loc[abs((trSet[j]-m_e))>(5*(std_e))].index,inplace = True)
+    trSet.drop((trSet.loc[trSet.binQuality == 0]).loc[abs((trSet[j]-m_p))>(5*(std_p))].index,inplace = True)
+    
+nindex = np.arange(len(trSet.index))
+trSet = trSet.set_index(nindex)
