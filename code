@@ -1,5 +1,7 @@
 import pandas as pd
 import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 #Δημιουργία DataFrame με τα δεδομένα μας
 data = pd.read_csv('winequality-white.csv', sep=";",header = 'infer')
@@ -42,3 +44,57 @@ for j in list(trSet)[:-2]:
     
 nindex = np.arange(len(trSet.index))
 trSet = trSet.set_index(nindex)
+
+#Απεικόνιση συνόλου εκπαίδευσης
+fig, axis = plt.subplots(6,2,figsize=(40,70))
+x,y=(0,0)
+for i in list(trSet)[:-2]:
+    sns.kdeplot(trSet.loc[trSet.binQuality == 1][i],shade=True,ax=axis[x,y])
+    ax = sns.kdeplot(trSet.loc[trSet.binQuality == 0][i],shade=True,ax=axis[x,y])
+    ax.set_title('Κατανομή χαρακτηριστικού ' +i);
+    y+=1
+    if(y%2==0):
+        y=0
+        x+=1
+        
+#Correlation Matrices
+cor_mat = trSet.loc[trSet.binQuality == 1].corr()
+fig, ax=plt.subplots(figsize=(10,10))
+ax = sns.heatmap(cor_mat,annot=True,ax=ax)
+ax.set(title='Excellent Quality')
+plt.show()
+
+cor_mat = trSet.loc[trSet.binQuality == 0].corr()
+fig, ax=plt.subplots(figsize=(10,10))
+ax = sns.heatmap(cor_mat,annot=True,ax=ax)
+ax.set(title='Poor Quality')
+plt.show()
+
+#Κανονικοποίηση
+exQ = trSet.loc[trSet.binQuality == 1]
+pQ = trSet.loc[trSet.binQuality == 0]
+trSet_norm = trSet
+trSet = pd.concat([exQ,pQ])
+
+for i in list(trSet)[:-2]:
+    m_s=(trSet.loc[trSet.binQuality == 1])[i].mean()
+    m_b=(trSet.loc[trSet.binQuality == 0])[i].mean()
+    std_s=(trSet.loc[trSet.binQuality == 1])[i].std()
+    std_b=(trSet.loc[trSet.binQuality == 0])[i].std()
+    trSet_norm[i] = np.concatenate((np.array((trSet.loc[trSet.binQuality == 1][i].tolist()) - m_s)/std_s,(np.array(trSet.loc[trSet.binQuality == 0][i].tolist()) - m_b)/std_b),axis=None)
+
+trSet_norm['quality'] = trSet['quality']
+trSet_norm['binQuality'] = trSet['binQuality']
+ 
+#PCA
+covMatrix = trSet.iloc[:,:11].cov()
+
+#Υπολογισμός ιδιοτιμων και ιδιοδιανυσματων
+(eigVal,eigVec) = np.linalg.eig(covMatrix)
+print(sorted(eigVal, reverse = True))
+
+plt.bar([list(data)[list(eigVal).index(i)] for i in sorted(eigVal, reverse = True) ],sorted(eigVal, reverse = True))
+plt.xticks(rotation=90)
+plt.xlabel("Eigenvalue Index")
+plt.ylabel("Eigenvalue")
+plt.show()
