@@ -78,11 +78,11 @@ trSet_norm = trSet
 trSet = pd.concat([exQ,pQ])
 
 for i in list(trSet)[:-2]:
-    m_s=(trSet.loc[trSet.binQuality == 1])[i].mean()
-    m_b=(trSet.loc[trSet.binQuality == 0])[i].mean()
-    std_s=(trSet.loc[trSet.binQuality == 1])[i].std()
-    std_b=(trSet.loc[trSet.binQuality == 0])[i].std()
-    trSet_norm[i] = np.concatenate((np.array((trSet.loc[trSet.binQuality == 1][i].tolist()) - m_s)/std_s,(np.array(trSet.loc[trSet.binQuality == 0][i].tolist()) - m_b)/std_b),axis=None)
+    m_e=(trSet.loc[trSet.binQuality == 1])[i].mean()
+    m_p=(trSet.loc[trSet.binQuality == 0])[i].mean()
+    std_e=(trSet.loc[trSet.binQuality == 1])[i].std()
+    std_p=(trSet.loc[trSet.binQuality == 0])[i].std()
+    trSet_norm[i] = np.concatenate((np.array((trSet.loc[trSet.binQuality == 1][i].tolist()) - m_e)/std_e,(np.array(trSet.loc[trSet.binQuality == 0][i].tolist()) - m_p)/std_p),axis=None)
 
 trSet_norm['quality'] = trSet['quality']
 trSet_norm['binQuality'] = trSet['binQuality']
