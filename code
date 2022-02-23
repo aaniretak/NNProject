@@ -3,6 +3,10 @@ import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn import preprocessing
+from sklearn.decomposition import PCA
+import scipy as sp
+import scipy.linalg as la
 
 #Δημιουργία DataFrame με τα δεδομένα μας
 data = pd.read_csv('winequality-white.csv', sep=";",header = 'infer')
@@ -72,33 +76,40 @@ ax.set(title='Poor Quality')
 plt.show()
 
 #Κανονικοποίηση
-exQ = trSet.loc[trSet.binQuality == 1]
-pQ = trSet.loc[trSet.binQuality == 0]
-trSet_norm = trSet
-trSet = pd.concat([exQ,pQ])
+scaler = preprocessing.StandardScaler().fit(trSet.iloc[:,:-2])
+train_scaled = scaler.transform(trSet.iloc[:,:-2])
+test_scaled = scaler.transform(testSet.iloc[:,:-2])
 
-for i in list(trSet)[:-2]:
-    m_e=(trSet.loc[trSet.binQuality == 1])[i].mean()
-    m_p=(trSet.loc[trSet.binQuality == 0])[i].mean()
-    std_e=(trSet.loc[trSet.binQuality == 1])[i].std()
-    std_p=(trSet.loc[trSet.binQuality == 0])[i].std()
-    trSet_norm[i] = np.concatenate((np.array((trSet.loc[trSet.binQuality == 1][i].tolist()) - m_e)/std_e,(np.array(trSet.loc[trSet.binQuality == 0][i].tolist()) - m_p)/std_p),axis=None)
+#Ανάλυση PCA
+pca = PCA().fit(train_scaled)
+print(pca.explained_variance_)
+print([list(trSet)[np.abs(pca.components_[i]).argmax()] for i in range(11)])
 
-trSet_norm['quality'] = trSet['quality']
-trSet_norm['binQuality'] = trSet['binQuality']
- 
-#PCA
-covMatrix = trSet.iloc[:,:11].cov()
+plt.plot(np.cumsum(pca.explained_variance_ratio_))
+plt.xlabel('number of components')
+plt.ylabel('cumulative explained variance');
+plt.show()
 
-#Υπολογισμός ιδιοτιμων και ιδιοδιανυσματων
-(eigVal,eigVec) = np.linalg.eig(covMatrix)
-print(sorted(eigVal, reverse = True))
+pca = PCA(n_components=4)
 
-plt.bar([list(data)[list(eigVal).index(i)] for i in sorted(eigVal, reverse = True) ],sorted(eigVal, reverse = True))
+trainPCA = pca.fit_transform(train_scaled)
+testPCA = pca.transform(test_scaled)
+
+#Κατανομή ιδιοτιμών πίνακα διασποράς
+covMatrix = pd.DataFrame(train_scaled).cov()
+
+import scipy as sp
+import scipy.linalg as la
+
+res = la.eig(covMatrix)
+eigenValues = [i.real for i in res[0]]
+eigenVectors = [i.real for i in res[1]]
+plt.bar([list(trSet.iloc[:,:-2])[eigenValues.index(i)] for i in sorted(eigenValues, reverse = True) ],sorted(eigenValues, reverse = True))
 plt.xticks(rotation=90)
 plt.xlabel("Eigenvalue Index")
 plt.ylabel("Eigenvalue")
 plt.show()
+########PROBLHMA PCA - PC != MEGALUTERES IDIOTIMES#######################################################
 
 #Βελτιστοποίηση παραμέτρων
 score = []
