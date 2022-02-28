@@ -244,7 +244,7 @@ coefs = pd.DataFrame(
        )
 
 coefs.plot(kind='barh', figsize=(9, 7))
-plt.title('Coefficients')
+plt.title('Coefficients - LSM')
 plt.axvline(x=0, color='.4')
 plt.subplots_adjust(left=.3)
 
@@ -256,6 +256,7 @@ indices = np.argsort(importances)
 
 fig, ax = plt.subplots()
 ax.barh(range(len(importances)), importances[indices])
+ax.set_title('Feature Importances - Boosted Decision tree')
 ax.set_yticks(range(len(importances)))
 _ = ax.set_yticklabels(np.array(list(trSet.iloc[:,:-2]))[indices])
 plt.show()
@@ -291,5 +292,5 @@ plt.bar(range(testSet.iloc[:,:-2].shape[1]), f, color="r", alpha=0.7)
 plt.xticks(ticks = range(testSet.iloc[:,:-2].shape[1]), labels = list(testSet.iloc[:,:-2]), rotation = 90)
 plt.xlabel("Feature")
 plt.ylabel("Importance")
-plt.title("Feature importances (Wine Quality)")
+plt.title("Feature importances - Neural Network")
 plt.show()
