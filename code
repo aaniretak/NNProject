@@ -221,14 +221,14 @@ clf_2 = clf_2.fit(train_scaled, trSet['binQuality'])
 
 
 #Neural Network:
-clf_3 = MLPClassifier(
-hidden_layer_sizes=(3),
-activation="relu",
-verbose=False,
-max_iter=350
-)
+clf_3 = keras.Sequential([
+    keras.layers.Flatten(input_shape=(11,)),    # input layer (1)
+    keras.layers.Dense(3, activation='relu'),   # hidden layer (2)
+    keras.layers.Dense(1, activation='sigmoid') # output layer (3)
+])
+clf_3.compile(optimizer='adam', loss='binary_crossentropy',metrics=['accuracy'])
 
-clf_3.fit(train_scaled, trSet.binQuality)
+clf_3.fit(train_scaled, pd.DataFrame(trSet.binQuality), epochs=55)
 
 # LSM
 scaler = preprocessing.StandardScaler().fit(trSet.iloc[:,:-2])
@@ -267,7 +267,8 @@ plt.show()
 from sklearn.metrics import accuracy_score
 from copy import deepcopy
 
-y_pred = clf_3.predict(test_scaled)
+temp = clf_3.predict(test_scaled)
+y_pred = [round(temp[i][0]) for i in range(len(clf_3.predict(test_scaled)))]
 y_test = testSet.binQuality
 
 def get_feature_importance(j, n):
@@ -278,7 +279,8 @@ def get_feature_importance(j, n):
         testSet_ = deepcopy(test_scaled.to_numpy())
         for i in range(len(testSet_[:,j])):
             testSet_[i,j] = testSet_[perm[i], j]
-        y_pred_ = clf_3.predict(testSet_)
+        temp = clf_3.predict(testSet_)
+        y_pred_= [round(temp[i][0]) for i in range(len(clf_3.predict(testSet_)))]
         s_ij = accuracy_score(y_test, y_pred_)
         total += s_ij
     return s - (total / n)
