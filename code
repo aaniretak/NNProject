@@ -198,9 +198,11 @@ print("roc_auc_LSM = ", auc(false_pos_f, true_pos_f))
 print("roc_auc_NN = ", auc(false_pos_nn, true_pos_nn))
 print("roc_auc_BDT = ", auc(false_pos_tree, true_pos_tree))
 
+#Variable Importance
+
 # LSM
 clf_1 = LinearDiscriminantAnalysis(solver="lsqr",shrinkage=r)
-clf_1.fit(trSet.iloc[:,:-2],trSet.binQuality)
+clf_1.fit(train_scaled,trSet.binQuality)
 
 W_LDA = clf_1.coef_[0]
 W0_LDA = clf_1.intercept_
@@ -215,18 +217,18 @@ print("Normalized W0 = ",W0_LDA/W_LDA[0])
 # Boosted Decision Tree
 tree = DecisionTreeClassifier(max_depth = 3)
 clf_2 = AdaBoostClassifier(n_estimators = 200, learning_rate = 0.5, base_estimator = tree)
-clf_2 = clf_2.fit(trSet.iloc[:,:-2], trSet['binQuality'])
+clf_2 = clf_2.fit(train_scaled, trSet['binQuality'])
 
 
 #Neural Network:
 clf_3 = MLPClassifier(
-hidden_layer_sizes=(8),
+hidden_layer_sizes=(3),
 activation="relu",
 verbose=False,
 max_iter=350
 )
 
-clf_3.fit(trSet.iloc[:,:-2], trSet.binQuality)
+clf_3.fit(train_scaled, trSet.binQuality)
 
 # LSM
 scaler = preprocessing.StandardScaler().fit(trSet.iloc[:,:-2])
@@ -265,15 +267,15 @@ plt.show()
 from sklearn.metrics import accuracy_score
 from copy import deepcopy
 
-y_pred = clf_3.predict(testSet.iloc[:,:-2])
+y_pred = clf_3.predict(test_scaled)
 y_test = testSet.binQuality
 
 def get_feature_importance(j, n):
     s = accuracy_score(testSet.binQuality, y_pred) # baseline score
     total = 0.0
     for i in range(n):
-        perm = np.random.permutation(range(testSet.shape[0]))
-        testSet_ = deepcopy(testSet.iloc[:,:-2].to_numpy())
+        perm = np.random.permutation(range(test_scaled.shape[0]))
+        testSet_ = deepcopy(test_scaled.to_numpy())
         for i in range(len(testSet_[:,j])):
             testSet_[i,j] = testSet_[perm[i], j]
         y_pred_ = clf_3.predict(testSet_)
@@ -283,13 +285,13 @@ def get_feature_importance(j, n):
 
 # Plot
 f = []
-for j in range(testSet.iloc[:,:-2].shape[1]):
+for j in range(test_scaled.shape[1]):
     f_j = get_feature_importance(j, 100)
     f.append(f_j)
 
 plt.figure(figsize=(10, 5))
-plt.bar(range(testSet.iloc[:,:-2].shape[1]), f, color="r", alpha=0.7)
-plt.xticks(ticks = range(testSet.iloc[:,:-2].shape[1]), labels = list(testSet.iloc[:,:-2]), rotation = 90)
+plt.bar(range(test_scaled.shape[1]), f, color="r", alpha=0.7)
+plt.xticks(ticks = range(test_scaled.shape[1]), labels = list(trSet.iloc[:,:-2]), rotation = 90)
 plt.xlabel("Feature")
 plt.ylabel("Importance")
 plt.title("Feature importances - Neural Network")
